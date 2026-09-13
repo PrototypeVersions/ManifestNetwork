@@ -1,6 +1,6 @@
 [package]
 name = "manifest-network-desktop"
-version = "0.2.0"
+version = "0.2.1"
 description = "Manifest Network Desktop private local AI node"
 authors = ["Manifest Network"]
 edition = "2021"
