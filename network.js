@@ -46,7 +46,7 @@ function installBrowserDemoSection() {
   const heroPrimary = document.querySelector('.hero .hero-actions .primary-btn');
   if (heroPrimary) {
     heroPrimary.href = '#demo';
-    heroPrimary.innerHTML = 'Try Browser Demo <span>→</span>';
+    heroPrimary.innerHTML = 'Try Browser Demo <span>↓</span>';
   }
 
   const nav = document.querySelector('.nav-links');
