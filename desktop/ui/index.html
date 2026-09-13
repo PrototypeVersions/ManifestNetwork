@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <meta name="color-scheme" content="light" />
-  <title>Manifest</title>
+  <title>Manifest Network</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
@@ -15,31 +15,31 @@
           <div class="brand-mark">M</div>
           <div>
             <strong>Manifest</strong>
-            <span>DESKTOP / PRIVATE AI</span>
+            <span>NETWORK / LOCAL AI NODE</span>
           </div>
         </div>
         <div class="rail-rule"></div>
-        <p class="rail-copy">One installation turns this computer into your personal AI.</p>
+        <p class="rail-copy">Private intelligence on this computer, with optional participation in a larger community network.</p>
       </div>
-      <div class="privacy-card">
-        <i></i>
-        <div><strong>Local by default</strong><span>Conversations stay on this computer.</span></div>
+      <div class="rail-bottom">
+        <button id="networkBtn" class="network-rail-button" type="button"><span class="network-dot"></span><div><strong>Network Settings</strong><small id="networkRailStatus">Private mode</small></div><b>→</b></button>
+        <div class="privacy-card"><i></i><div><strong>Local by default</strong><span>Network permissions are separate and optional.</span></div></div>
       </div>
     </aside>
 
     <main class="main">
       <section id="setupView" class="view setup-view">
-        <div class="eyebrow">MANIFEST DESKTOP / 0.1</div>
-        <h1>Turn this computer<br/>into your AI.</h1>
-        <p class="lead">Manifest understands your hardware, installs an appropriate local model, and runs it for you. No model hunting. No API key. No separate AI runtime.</p>
+        <div class="eyebrow">MANIFEST NETWORK / 0.2 ALPHA</div>
+        <h1>Start private.<br/>Connect by choice.</h1>
+        <p class="lead">Manifest turns this computer into a local AI node first. After setup, you can decide whether this device should remain fully private or contribute selected resources to the Manifest Network.</p>
 
         <div class="setup-grid">
           <section class="setup-card primary-card">
             <div class="step-number">01</div>
             <div class="card-copy">
-              <span class="card-label">DEVICE INTELLIGENCE</span>
+              <span class="card-label">PERSONAL AI NODE</span>
               <h2>Understand this computer.</h2>
-              <p>Manifest checks the resources available to local AI and creates a private capability profile.</p>
+              <p>Manifest checks local hardware and creates a private capability profile without sending it to a server.</p>
             </div>
             <button id="analyzeBtn" class="button dark">Analyze This Computer <span>→</span></button>
           </section>
@@ -57,7 +57,7 @@
           <section id="recommendCard" class="setup-card install-card hidden">
             <div class="step-number">02</div>
             <div class="card-copy">
-              <span class="card-label">MANIFEST RECOMMENDS</span>
+              <span class="card-label">LOCAL INTELLIGENCE</span>
               <h2 id="modelName">Manifest Local</h2>
               <p id="modelReason">A private local model selected to run comfortably on this computer.</p>
               <div class="model-meta"><span id="modelDetail">Local intelligence</span><span id="modelSize">~1.12 GB</span></div>
@@ -72,25 +72,26 @@
           <section id="readyCard" class="setup-card ready-card hidden">
             <div class="step-number check">✓</div>
             <div class="card-copy">
-              <span class="card-label">READY</span>
+              <span class="card-label">LOCAL NODE READY</span>
               <h2>Your AI is installed.</h2>
-              <p>Manifest will start the private runtime and keep it available only on this computer.</p>
+              <p>Manifest will start the local runtime. Network participation remains off unless you choose otherwise.</p>
             </div>
             <button id="startBtn" class="button dark">Start Manifest <span>→</span></button>
           </section>
         </div>
 
-        <div id="setupStatus" class="status-line">PRIVATE / AUTOMATIC / YOURS</div>
+        <div id="setupStatus" class="status-line">PRIVATE BY DEFAULT / NETWORK BY CHOICE</div>
       </section>
 
       <section id="chatView" class="view chat-view hidden">
         <header class="chat-head">
           <div>
-            <span class="eyebrow">LOCAL INTELLIGENCE</span>
+            <span class="eyebrow">PERSONAL AI NODE</span>
             <h2>Manifest</h2>
           </div>
           <div class="chat-head-actions">
-            <span class="runtime-pill"><i></i> ON THIS COMPUTER</span>
+            <span class="runtime-pill"><i></i> LOCAL</span>
+            <button id="networkHeaderBtn" class="network-header-button" type="button">Network</button>
             <button id="newChatBtn" class="text-button">New Chat</button>
           </div>
         </header>
@@ -99,7 +100,7 @@
           <div id="emptyState" class="empty-state">
             <div class="empty-mark">M</div>
             <h3>Your private local AI is ready.</h3>
-            <p>Ask anything. Manifest is running the model installed on this computer.</p>
+            <p>Ask anything. Network contribution is independent of your private chat.</p>
           </div>
         </div>
 
@@ -108,11 +109,44 @@
             <textarea id="promptInput" rows="1" placeholder="Message Manifest" autocomplete="off"></textarea>
             <button id="sendBtn" class="send" type="submit" aria-label="Send">↑</button>
           </form>
-          <p>LOCAL INFERENCE · NO PER-MESSAGE API FEE</p>
+          <p>LOCAL INFERENCE · NETWORK PARTICIPATION OPTIONAL</p>
         </div>
       </section>
     </main>
   </div>
+
+  <div id="networkOverlay" class="network-overlay hidden" aria-hidden="true">
+    <section class="network-panel" role="dialog" aria-modal="true" aria-labelledby="networkTitle">
+      <header class="network-panel-head">
+        <div><span>MANIFEST NETWORK / PARTICIPATION PREVIEW</span><h2 id="networkTitle">Choose what this node contributes.</h2><p>The distributed network backend is not active in this alpha. These preferences are saved only on this computer.</p></div>
+        <button id="networkCloseBtn" class="close-btn" type="button" aria-label="Close">×</button>
+      </header>
+
+      <div class="network-panel-body">
+        <div class="network-settings">
+          <label class="network-setting"><div><strong>Performance intelligence</strong><span>Share model speed, memory use, crashes, and hardware-level benchmarks without sharing chat content.</span></div><input id="performanceToggle" class="toggle" type="checkbox" /></label>
+          <label class="network-setting"><div><strong>Idle compute</strong><span>Allow approved network jobs only when this computer is idle and plugged in.</span></div><input id="computeToggle" class="toggle" type="checkbox" /></label>
+          <div id="computeLimit" class="compute-limit disabled"><div><span>Maximum nightly contribution</span><strong><span id="hoursValue">4</span> hours</strong></div><input id="hoursSlider" type="range" min="1" max="12" value="4" /></div>
+          <label class="network-setting"><div><strong>Learning contributions</strong><span>Allow locally sanitized learning packets. Raw chat sharing remains off by default.</span></div><input id="learningToggle" class="toggle" type="checkbox" /></label>
+          <label class="network-setting"><div><strong>Human feedback</strong><span>Offer occasional comparisons or corrections when human judgment is genuinely useful.</span></div><input id="feedbackToggle" class="toggle" type="checkbox" /></label>
+        </div>
+
+        <aside class="network-summary">
+          <span>NODE MODE</span>
+          <strong id="nodeMode">PRIVATE</strong>
+          <p id="nodeModeCopy">Nothing is selected for contribution.</p>
+          <div class="summary-rule"></div>
+          <div><span>Estimated credits</span><b id="creditEstimate">0 / month</b></div>
+          <div><span>Chat upload</span><b>OFF</b></div>
+          <div><span>Current backend</span><b>PREVIEW ONLY</b></div>
+          <small>Future credits will be based on useful verified work, not merely on enabling a setting.</small>
+        </aside>
+      </div>
+
+      <footer class="network-panel-foot"><span>COMPUTE PERMISSION AND DATA PERMISSION ARE SEPARATE</span><button id="networkDoneBtn" class="button dark" type="button">Save Locally <span>✓</span></button></footer>
+    </section>
+  </div>
+
   <script src="app.js"></script>
 </body>
 </html>
