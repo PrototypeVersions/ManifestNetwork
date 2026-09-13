@@ -49,13 +49,13 @@ jobs:
           test -n "$WINDOWS_EXE"
           test -n "$WINDOWS_MSI"
 
-          cp "$APPLE_DMG" "release/Manifest-Network-${VERSION}-Apple-Silicon.dmg"
-          cp "$INTEL_DMG" "release/Manifest-Network-${VERSION}-Intel.dmg"
-          cp "$WINDOWS_EXE" "release/Manifest-Network-${VERSION}-Windows-x64.exe"
-          cp "$WINDOWS_MSI" "release/Manifest-Network-${VERSION}-Windows-x64.msi"
+          cp "$APPLE_DMG" "release/Manifest-${VERSION}-Apple-Silicon.dmg"
+          cp "$INTEL_DMG" "release/Manifest-${VERSION}-Intel.dmg"
+          cp "$WINDOWS_EXE" "release/Manifest-${VERSION}-Windows-x64.exe"
+          cp "$WINDOWS_MSI" "release/Manifest-${VERSION}-Windows-x64.msi"
 
           cat > release-notes.md <<EOF
-          # Manifest Network Desktop ${VERSION}
+          # Manifest Desktop ${VERSION}
 
           Private local AI with an optional community-network participation layer.
 
@@ -64,7 +64,7 @@ jobs:
           - automatic local-model installation;
           - bundled local inference;
           - private chat on the user's computer;
-          - Manifest Network participation controls for performance, compute, learning, and human feedback.
+          - Manifest participation controls for performance, compute, learning, and human feedback.
 
           ## Network status
           The contribution network is still a product preview in this release. Participation preferences are stored locally; the alpha does not yet transmit network jobs, learning packets, or contribution credits.
@@ -88,11 +88,11 @@ jobs:
           TAG="v${VERSION}"
           if gh release view "$TAG" >/dev/null 2>&1; then
             gh release upload "$TAG" release/* --clobber
-            gh release edit "$TAG" --title "Manifest Network Desktop ${VERSION}" --notes-file release-notes.md --latest
+            gh release edit "$TAG" --title "Manifest Desktop ${VERSION}" --notes-file release-notes.md --latest
           else
             gh release create "$TAG" release/* \
               --target "${{ github.event.workflow_run.head_sha }}" \
-              --title "Manifest Network Desktop ${VERSION}" \
+              --title "Manifest Desktop ${VERSION}" \
               --notes-file release-notes.md \
               --latest
           fi
