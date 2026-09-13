@@ -52,7 +52,7 @@ async function detectPlatform() {
   }
 
   if (primary) primary.href = '#downloads';
-  if (recommendation) recommendation.textContent = 'Choose the platform that matches the computer where you want to run Manifest Network.';
+  if (recommendation) recommendation.textContent = 'Choose the platform that matches the computer where you want to run Manifest.';
 }
 
 function releaseDownloadLinks() {
