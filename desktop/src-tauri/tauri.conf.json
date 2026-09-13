@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "Manifest",
-  "version": "0.1.0",
-  "identifier": "io.manifest.desktop",
+  "productName": "Manifest Network",
+  "version": "0.2.0",
+  "identifier": "io.manifest.network.desktop",
   "build": {
     "frontendDist": "../ui"
   },
@@ -11,7 +11,7 @@
     "windows": [
       {
         "label": "main",
-        "title": "Manifest",
+        "title": "Manifest Network",
         "width": 1180,
         "height": 780,
         "minWidth": 820,
@@ -36,9 +36,9 @@
       "icons/icon.icns",
       "icons/icon.ico"
     ],
-    "copyright": "Manifest",
-    "shortDescription": "Private local AI, automatically configured for your computer.",
-    "longDescription": "Manifest analyzes your computer, installs a local AI model and runs private inference without per-message API fees.",
+    "copyright": "Manifest Network",
+    "shortDescription": "Private local AI with optional community network participation.",
+    "longDescription": "Manifest Network runs private AI locally and is being built to let users optionally contribute compute, evaluations, and approved learning to a shared intelligence network.",
     "macOS": {
       "signingIdentity": "-"
     }
