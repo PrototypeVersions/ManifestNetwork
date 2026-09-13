@@ -1,8 +1,8 @@
 [package]
 name = "manifest-network-desktop"
-version = "0.2.3"
-description = "Manifest Network Desktop private local AI node"
-authors = ["Manifest Network"]
+version = "0.2.4"
+description = "Manifest Desktop private local AI node"
+authors = ["Manifest"]
 edition = "2021"
 rust-version = "1.88"
 
