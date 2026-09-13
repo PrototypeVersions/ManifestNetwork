@@ -22,6 +22,25 @@ const promptInput = $("promptInput");
 const sendBtn = $("sendBtn");
 const newChatBtn = $("newChatBtn");
 
+const networkBtn = $("networkBtn");
+const networkHeaderBtn = $("networkHeaderBtn");
+const networkOverlay = $("networkOverlay");
+const networkCloseBtn = $("networkCloseBtn");
+const networkDoneBtn = $("networkDoneBtn");
+const networkRailStatus = $("networkRailStatus");
+const performanceToggle = $("performanceToggle");
+const computeToggle = $("computeToggle");
+const learningToggle = $("learningToggle");
+const feedbackToggle = $("feedbackToggle");
+const computeLimit = $("computeLimit");
+const hoursSlider = $("hoursSlider");
+const hoursValue = $("hoursValue");
+const nodeMode = $("nodeMode");
+const nodeModeCopy = $("nodeModeCopy");
+const creditEstimate = $("creditEstimate");
+
+const NETWORK_STORAGE_KEY = "manifest-network-preferences-v1";
+
 let history = [];
 let activeAssistant = null;
 let generating = false;
@@ -50,7 +69,7 @@ async function analyze() {
     $("modelReason").textContent = p.reason;
     profileCard.classList.remove("hidden");
     recommendCard.classList.remove("hidden");
-    setStatus("DEVICE PROFILE COMPLETE / RECOMMENDATION READY");
+    setStatus("DEVICE PROFILE COMPLETE / LOCAL RECOMMENDATION READY");
   } catch (err) {
     setStatus(`ANALYSIS ERROR / ${String(err)}`);
   } finally {
@@ -67,7 +86,7 @@ async function refreshInstallState() {
       readyCard.classList.remove("hidden");
       installBtn.textContent = "Installed ✓";
       installBtn.disabled = true;
-      setStatus("LOCAL AI INSTALLED / READY TO START");
+      setStatus("LOCAL AI INSTALLED / NETWORK STILL OPTIONAL");
       return true;
     }
   } catch (_) {}
@@ -85,7 +104,7 @@ async function installModel() {
     downloadText.textContent = "Verified and installed";
     installBtn.textContent = "Installed ✓";
     readyCard.classList.remove("hidden");
-    setStatus("LOCAL AI INSTALLED / STARTING MANIFEST");
+    setStatus("LOCAL AI INSTALLED / STARTING MANIFEST NETWORK");
     await startManifest();
   } catch (err) {
     installBtn.disabled = false;
@@ -156,6 +175,93 @@ async function sendMessage(text) {
   }
 }
 
+function defaultNetworkPreferences() {
+  return { performance: false, compute: false, learning: false, feedback: false, hours: 4 };
+}
+
+function loadNetworkPreferences() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(NETWORK_STORAGE_KEY) || "null");
+    return { ...defaultNetworkPreferences(), ...(saved || {}) };
+  } catch (_) {
+    return defaultNetworkPreferences();
+  }
+}
+
+function readNetworkControls() {
+  return {
+    performance: !!performanceToggle?.checked,
+    compute: !!computeToggle?.checked,
+    learning: !!learningToggle?.checked,
+    feedback: !!feedbackToggle?.checked,
+    hours: Math.max(1, Math.min(12, Number(hoursSlider?.value || 4)))
+  };
+}
+
+function writeNetworkControls(prefs) {
+  if (performanceToggle) performanceToggle.checked = !!prefs.performance;
+  if (computeToggle) computeToggle.checked = !!prefs.compute;
+  if (learningToggle) learningToggle.checked = !!prefs.learning;
+  if (feedbackToggle) feedbackToggle.checked = !!prefs.feedback;
+  if (hoursSlider) hoursSlider.value = String(prefs.hours || 4);
+  updateNetworkPreview();
+}
+
+function estimateCredits(prefs) {
+  let total = 0;
+  if (prefs.performance) total += 240;
+  if (prefs.compute) total += prefs.hours * 155;
+  if (prefs.learning) total += 520;
+  if (prefs.feedback) total += 180;
+  return total;
+}
+
+function updateNetworkPreview() {
+  const prefs = readNetworkControls();
+  const enabled = [prefs.performance, prefs.compute, prefs.learning, prefs.feedback].filter(Boolean).length;
+  const credits = estimateCredits(prefs);
+
+  if (hoursValue) hoursValue.textContent = String(prefs.hours);
+  computeLimit?.classList.toggle("disabled", !prefs.compute);
+  if (creditEstimate) creditEstimate.textContent = `${credits.toLocaleString()} / month`;
+
+  if (enabled === 0) {
+    if (nodeMode) nodeMode.textContent = "PRIVATE";
+    if (nodeModeCopy) nodeModeCopy.textContent = "Nothing is selected for contribution.";
+  } else if (prefs.compute && (prefs.performance || prefs.learning || prefs.feedback)) {
+    if (nodeMode) nodeMode.textContent = "NETWORK";
+    if (nodeModeCopy) nodeModeCopy.textContent = `${enabled} contribution modes selected. Preferences remain local in this alpha.`;
+  } else {
+    if (nodeMode) nodeMode.textContent = "SELECTIVE";
+    if (nodeModeCopy) nodeModeCopy.textContent = `${enabled} contribution mode${enabled === 1 ? "" : "s"} selected.`;
+  }
+}
+
+function updateNetworkBadges() {
+  const prefs = loadNetworkPreferences();
+  const enabled = [prefs.performance, prefs.compute, prefs.learning, prefs.feedback].filter(Boolean).length;
+  const label = enabled ? `${enabled} mode${enabled === 1 ? "" : "s"} selected` : "Private mode";
+  if (networkRailStatus) networkRailStatus.textContent = label;
+  networkBtn?.classList.toggle("active", enabled > 0);
+  networkHeaderBtn?.classList.toggle("active", enabled > 0);
+  if (networkHeaderBtn) networkHeaderBtn.textContent = enabled ? `Network · ${enabled}` : "Network";
+}
+
+function openNetworkSettings() {
+  writeNetworkControls(loadNetworkPreferences());
+  networkOverlay?.classList.remove("hidden");
+  networkOverlay?.setAttribute("aria-hidden", "false");
+}
+
+function closeNetworkSettings(save = false) {
+  if (save) {
+    localStorage.setItem(NETWORK_STORAGE_KEY, JSON.stringify(readNetworkControls()));
+    updateNetworkBadges();
+  }
+  networkOverlay?.classList.add("hidden");
+  networkOverlay?.setAttribute("aria-hidden", "true");
+}
+
 analyzeBtn.addEventListener("click", analyze);
 installBtn.addEventListener("click", installModel);
 startBtn.addEventListener("click", startManifest);
@@ -173,6 +279,17 @@ newChatBtn.addEventListener("click", () => {
   emptyState.classList.remove("hidden");
   promptInput.focus();
 });
+
+networkBtn?.addEventListener("click", openNetworkSettings);
+networkHeaderBtn?.addEventListener("click", openNetworkSettings);
+networkCloseBtn?.addEventListener("click", () => closeNetworkSettings(false));
+networkDoneBtn?.addEventListener("click", () => closeNetworkSettings(true));
+networkOverlay?.addEventListener("click", (event) => {
+  if (event.target === networkOverlay) closeNetworkSettings(false);
+});
+[performanceToggle, computeToggle, learningToggle, feedbackToggle, hoursSlider]
+  .filter(Boolean)
+  .forEach((control) => control.addEventListener("input", updateNetworkPreview));
 
 listen("model-download-progress", ({ payload }) => {
   const pct = Math.max(0, Math.min(100, payload.percent || 0));
@@ -198,6 +315,8 @@ listen("chat-done", () => {
   promptInput.focus();
 });
 
+updateNetworkBadges();
+
 (async function boot() {
   const installed = await refreshInstallState();
   if (installed) {
@@ -210,7 +329,7 @@ listen("chat-done", () => {
       $("scorePill").textContent = `MANIFEST SCORE ${p.score}`;
       profileCard.classList.remove("hidden");
     } catch (_) {}
-    setStatus("LOCAL AI INSTALLED / STARTING MANIFEST");
+    setStatus("LOCAL AI INSTALLED / STARTING MANIFEST NETWORK");
     await startManifest();
   }
 })();
