@@ -72,6 +72,26 @@ fn model_path(app: &AppHandle) -> Result<PathBuf, String> {
     Ok(root.join("models").join(MODEL_FILE))
 }
 
+fn remove_file_with_retry(path: &PathBuf) -> Result<(), String> {
+    if !path.exists() {
+        return Ok(());
+    }
+    for attempt in 0..10 {
+        match fs::remove_file(path) {
+            Ok(_) => return Ok(()),
+            Err(error) if error.kind() == std::io::ErrorKind::NotFound => return Ok(()),
+            Err(error) if attempt < 9 => {
+                let _ = error;
+                std::thread::sleep(Duration::from_millis(120));
+            }
+            Err(error) => {
+                return Err(format!("Could not remove {}: {error}", path.to_string_lossy()));
+            }
+        }
+    }
+    Ok(())
+}
+
 #[tauri::command]
 fn get_device_profile() -> DeviceProfile {
     let mut system = System::new_all();
@@ -154,7 +174,7 @@ async fn install_recommended_model(app: AppHandle) -> Result<InstallState, Strin
     }
 
     let client = reqwest::Client::builder()
-        .user_agent("Manifest-Desktop/0.1")
+        .user_agent("Manifest-Network-Desktop/0.2")
         .build()
         .map_err(|e| e.to_string())?;
     let response = client
@@ -321,6 +341,25 @@ fn stop_local_ai(state: State<'_, RuntimeState>) -> Result<(), String> {
 }
 
 #[tauri::command]
+fn reset_manifest_state(app: AppHandle, state: State<'_, RuntimeState>) -> Result<(), String> {
+    if let Some(child) = state.child.lock().map_err(|_| "Runtime state unavailable")?.take() {
+        let _ = child.kill();
+        std::thread::sleep(Duration::from_millis(180));
+    }
+
+    let path = model_path(&app)?;
+    let temp = path.with_extension("gguf.part");
+    remove_file_with_retry(&temp)?;
+    remove_file_with_retry(&path)?;
+
+    if let Some(parent) = path.parent() {
+        let _ = fs::remove_dir(parent);
+    }
+
+    Ok(())
+}
+
+#[tauri::command]
 async fn chat(app: AppHandle, messages: Vec<ChatMessage>) -> Result<(), String> {
     if !runtime_is_ready().await {
         return Err("The local AI runtime is not ready.".to_string());
@@ -400,6 +439,7 @@ pub fn run() {
             install_recommended_model,
             start_local_ai,
             stop_local_ai,
+            reset_manifest_state,
             chat
         ])
         .run(tauri::generate_context!())
