@@ -271,7 +271,7 @@ async function installModel() {
     downloadText.textContent = "Verified and installed";
     installBtn.textContent = "Installed ✓";
     readyCard.classList.remove("hidden");
-    setStatus("LOCAL AI INSTALLED / STARTING MANIFEST NETWORK");
+    setStatus("LOCAL AI INSTALLED / STARTING MANIFEST");
     await startManifest();
   } catch (err) {
     installBtn.disabled = false;
@@ -439,7 +439,7 @@ function closeNetworkSettings(save = false) {
 
 async function resetManifestNetwork() {
   const okay = window.confirm(
-    "Reset Manifest Network on this computer?\n\nThis will remove the installed local AI model, saved chats, and Network settings. The app itself will remain installed."
+    "Reset Manifest on this computer?\n\nThis will remove the installed local AI model, saved chats, and Network settings. The app itself will remain installed."
   );
   if (!okay) return;
 
@@ -454,7 +454,7 @@ async function resetManifestNetwork() {
   } catch (err) {
     window.alert(`Manifest could not finish the reset: ${String(err)}`);
     resetBtn.disabled = false;
-    resetBtn.querySelector("strong").textContent = "Reset Manifest Network";
+    resetBtn.querySelector("strong").textContent = "Reset Manifest";
   }
 }
 
@@ -525,7 +525,7 @@ renderConversation();
       $("scorePill").textContent = `MANIFEST SCORE ${p.score}`;
       profileCard.classList.remove("hidden");
     } catch (_) {}
-    setStatus("LOCAL AI INSTALLED / STARTING MANIFEST NETWORK");
+    setStatus("LOCAL AI INSTALLED / STARTING MANIFEST");
     await startManifest();
   }
 })();
