@@ -17,9 +17,9 @@ function recommend(type, label, href, detail) {
 }
 
 const links = {
-  apple: 'https://github.com/PrototypeVersions/Manifest/releases/download/v0.1.0/Manifest-0.1.0-Apple-Silicon.dmg',
-  intel: 'https://github.com/PrototypeVersions/Manifest/releases/download/v0.1.0/Manifest-0.1.0-Intel.dmg',
-  windows: 'https://github.com/PrototypeVersions/Manifest/releases/download/v0.1.0/Manifest-0.1.0-Windows-x64.exe'
+  apple: 'https://github.com/PrototypeVersions/ManifestNetwork/releases/download/v0.2.0/Manifest-Network-0.2.0-Apple-Silicon.dmg',
+  intel: 'https://github.com/PrototypeVersions/ManifestNetwork/releases/download/v0.2.0/Manifest-Network-0.2.0-Intel.dmg',
+  windows: 'https://github.com/PrototypeVersions/ManifestNetwork/releases/download/v0.2.0/Manifest-Network-0.2.0-Windows-x64.exe'
 };
 
 async function detectPlatform() {
@@ -49,7 +49,7 @@ async function detectPlatform() {
   }
 
   if (primary) primary.href = '#downloads';
-  if (recommendation) recommendation.textContent = 'Choose the platform that matches the computer where you want to run Manifest.';
+  if (recommendation) recommendation.textContent = 'Choose the platform that matches the computer where you want to run Manifest Network.';
 }
 
 detectPlatform();
