@@ -6,7 +6,7 @@ const cards = {
 const primary = document.getElementById('primaryDownload');
 const recommendation = document.getElementById('recommendationText');
 
-const RELEASE_TAG = 'v0.2.2';
+const RELEASE_TAG = 'v0.2.3';
 const RELEASE_API = `https://api.github.com/repos/PrototypeVersions/ManifestNetwork/releases/tags/${RELEASE_TAG}`;
 
 function recommend(type, label, href, detail) {
@@ -20,9 +20,9 @@ function recommend(type, label, href, detail) {
 }
 
 const links = {
-  apple: 'https://github.com/PrototypeVersions/ManifestNetwork/releases/download/v0.2.2/Manifest-Network-0.2.2-Apple-Silicon.dmg',
-  intel: 'https://github.com/PrototypeVersions/ManifestNetwork/releases/download/v0.2.2/Manifest-Network-0.2.2-Intel.dmg',
-  windows: 'https://github.com/PrototypeVersions/ManifestNetwork/releases/download/v0.2.2/Manifest-Network-0.2.2-Windows-x64.exe'
+  apple: 'https://github.com/PrototypeVersions/ManifestNetwork/releases/download/v0.2.3/Manifest-Network-0.2.3-Apple-Silicon.dmg',
+  intel: 'https://github.com/PrototypeVersions/ManifestNetwork/releases/download/v0.2.3/Manifest-Network-0.2.3-Intel.dmg',
+  windows: 'https://github.com/PrototypeVersions/ManifestNetwork/releases/download/v0.2.3/Manifest-Network-0.2.3-Windows-x64.exe'
 };
 
 async function detectPlatform() {
@@ -115,12 +115,12 @@ async function refreshReleaseAvailability() {
     });
 
     if (pending > 0) {
-      if (recommendation) recommendation.textContent = 'The 0.2.2 installers are still being published. Download buttons will activate automatically as each installer becomes available.';
+      if (recommendation) recommendation.textContent = 'The 0.2.3 installers are still being published. Download buttons will activate automatically as each installer becomes available.';
       window.setTimeout(refreshReleaseAvailability, 30000);
     }
   } catch (_) {
     downloadLinks.forEach(markPending);
-    if (recommendation) recommendation.textContent = 'The 0.2.2 installers are finishing publication now. Download buttons will activate automatically when the release is ready.';
+    if (recommendation) recommendation.textContent = 'The 0.2.3 installers are finishing publication now. Download buttons will activate automatically when the release is ready.';
     window.setTimeout(refreshReleaseAvailability, 30000);
   }
 }
