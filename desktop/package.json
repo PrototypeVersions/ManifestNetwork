@@ -1,8 +1,8 @@
 {
   "name": "manifest-network-desktop",
   "private": true,
-  "version": "0.2.3",
-  "description": "Manifest Network Desktop — private local AI with optional network participation",
+  "version": "0.2.4",
+  "description": "Manifest Desktop — private local AI with optional network participation",
   "scripts": {
     "tauri": "tauri",
     "icons": "tauri icon app-icon.svg",
