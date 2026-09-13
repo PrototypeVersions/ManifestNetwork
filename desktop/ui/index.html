@@ -6,11 +6,12 @@
   <meta name="color-scheme" content="light" />
   <title>Manifest Network</title>
   <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="history.css" />
 </head>
 <body>
   <div class="app-shell">
     <aside class="rail">
-      <div>
+      <div class="rail-main">
         <div class="brand-row">
           <div class="brand-mark">M</div>
           <div>
@@ -19,10 +20,16 @@
           </div>
         </div>
         <div class="rail-rule"></div>
-        <p class="rail-copy">Private intelligence on this computer, with optional participation in a larger community network.</p>
+        <button id="railNewChatBtn" class="rail-new-chat" type="button"><span>＋</span><strong>New chat</strong></button>
+        <div class="chat-history-block">
+          <div class="chat-history-head"><span>CHATS</span><small>Stored on this device</small></div>
+          <div id="chatSessionList" class="chat-session-list" aria-label="Saved chats"></div>
+          <div id="noChatsLabel" class="no-chats-label">No saved chats yet.</div>
+        </div>
       </div>
       <div class="rail-bottom">
         <button id="networkBtn" class="network-rail-button" type="button"><span class="network-dot"></span><div><strong>Network Settings</strong><small id="networkRailStatus">Private mode</small></div><b>→</b></button>
+        <button id="resetBtn" class="reset-button" type="button"><strong>Reset Manifest Network</strong><span>Remove local AI, chats, and settings</span></button>
         <div class="privacy-card"><i></i><div><strong>Local by default</strong><span>Network permissions are separate and optional.</span></div></div>
       </div>
     </aside>
@@ -87,7 +94,7 @@
         <header class="chat-head">
           <div>
             <span class="eyebrow">PERSONAL AI NODE</span>
-            <h2>Manifest</h2>
+            <h2 id="chatTitle">Manifest</h2>
           </div>
           <div class="chat-head-actions">
             <span class="runtime-pill"><i></i> LOCAL</span>
