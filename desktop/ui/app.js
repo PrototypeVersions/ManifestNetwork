@@ -21,6 +21,11 @@ const chatForm = $("chatForm");
 const promptInput = $("promptInput");
 const sendBtn = $("sendBtn");
 const newChatBtn = $("newChatBtn");
+const railNewChatBtn = $("railNewChatBtn");
+const chatSessionList = $("chatSessionList");
+const noChatsLabel = $("noChatsLabel");
+const chatTitle = $("chatTitle");
+const resetBtn = $("resetBtn");
 
 const networkBtn = $("networkBtn");
 const networkHeaderBtn = $("networkHeaderBtn");
@@ -40,8 +45,12 @@ const nodeModeCopy = $("nodeModeCopy");
 const creditEstimate = $("creditEstimate");
 
 const NETWORK_STORAGE_KEY = "manifest-network-preferences-v1";
+const CHAT_STORAGE_KEY = "manifest-chat-sessions-v1";
+const ACTIVE_CHAT_KEY = "manifest-active-chat-v1";
 
-let history = [];
+let sessions = loadChatSessions();
+let currentSessionId = localStorage.getItem(ACTIVE_CHAT_KEY) || sessions[0]?.id || null;
+let history = currentSession()?.messages.map((message) => ({ ...message })) || [];
 let activeAssistant = null;
 let generating = false;
 let starting = false;
@@ -54,6 +63,164 @@ function formatBytes(bytes) {
 }
 
 function setStatus(text) { setupStatus.textContent = text; }
+
+function createId() {
+  if (window.crypto?.randomUUID) return window.crypto.randomUUID();
+  return `chat-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+}
+
+function cleanSessionTitle(text) {
+  const singleLine = String(text || "").replace(/\s+/g, " ").trim();
+  if (!singleLine) return "New chat";
+  return singleLine.length > 44 ? `${singleLine.slice(0, 43)}…` : singleLine;
+}
+
+function loadChatSessions() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(CHAT_STORAGE_KEY) || "[]");
+    if (!Array.isArray(saved)) return [];
+    return saved
+      .filter((session) => session && typeof session.id === "string" && Array.isArray(session.messages))
+      .map((session) => ({
+        id: session.id,
+        title: cleanSessionTitle(session.title || "New chat"),
+        updatedAt: Number(session.updatedAt || Date.now()),
+        messages: session.messages
+          .filter((message) => message && ["user", "assistant"].includes(message.role) && typeof message.content === "string")
+          .map((message) => ({ role: message.role, content: message.content }))
+      }))
+      .sort((a, b) => b.updatedAt - a.updatedAt);
+  } catch (_) {
+    return [];
+  }
+}
+
+function saveChatSessions() {
+  sessions.sort((a, b) => b.updatedAt - a.updatedAt);
+  localStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(sessions));
+  if (currentSessionId) localStorage.setItem(ACTIVE_CHAT_KEY, currentSessionId);
+  else localStorage.removeItem(ACTIVE_CHAT_KEY);
+}
+
+function currentSession() {
+  return sessions.find((session) => session.id === currentSessionId) || null;
+}
+
+function ensureCurrentSession() {
+  let session = currentSession();
+  if (session) return session;
+  session = { id: createId(), title: "New chat", updatedAt: Date.now(), messages: [] };
+  sessions.unshift(session);
+  currentSessionId = session.id;
+  saveChatSessions();
+  renderSessionList();
+  return session;
+}
+
+function persistCurrentSession() {
+  const session = ensureCurrentSession();
+  session.messages = history.map((message) => ({ role: message.role, content: message.content }));
+  const firstUser = session.messages.find((message) => message.role === "user" && message.content.trim());
+  session.title = firstUser ? cleanSessionTitle(firstUser.content) : "New chat";
+  session.updatedAt = Date.now();
+  saveChatSessions();
+  renderSessionList();
+  updateChatTitle();
+}
+
+function updateChatTitle() {
+  const session = currentSession();
+  if (chatTitle) chatTitle.textContent = session && session.title !== "New chat" ? session.title : "Manifest";
+}
+
+function renderSessionList() {
+  if (!chatSessionList) return;
+  chatSessionList.innerHTML = "";
+  const sorted = [...sessions].sort((a, b) => b.updatedAt - a.updatedAt);
+  noChatsLabel?.classList.toggle("hidden", sorted.length > 0);
+
+  sorted.forEach((session) => {
+    const row = document.createElement("div");
+    row.className = `chat-session-item${session.id === currentSessionId ? " active" : ""}`;
+
+    const open = document.createElement("button");
+    open.type = "button";
+    open.className = "chat-session-open";
+    open.textContent = session.title || "New chat";
+    open.title = session.title || "New chat";
+    open.addEventListener("click", () => loadSession(session.id));
+
+    const remove = document.createElement("button");
+    remove.type = "button";
+    remove.className = "chat-session-delete";
+    remove.textContent = "×";
+    remove.setAttribute("aria-label", `Delete ${session.title || "chat"}`);
+    remove.addEventListener("click", (event) => {
+      event.stopPropagation();
+      deleteSession(session.id);
+    });
+
+    row.append(open, remove);
+    chatSessionList.appendChild(row);
+  });
+}
+
+function clearRenderedMessages() {
+  messagesEl.querySelectorAll(".message").forEach((node) => node.remove());
+}
+
+function renderConversation() {
+  clearRenderedMessages();
+  if (!history.length) {
+    emptyState?.classList.remove("hidden");
+  } else {
+    emptyState?.classList.add("hidden");
+    history.forEach((message) => addMessage(message.role, message.content));
+  }
+  updateChatTitle();
+}
+
+function loadSession(id) {
+  if (generating) return;
+  const session = sessions.find((candidate) => candidate.id === id);
+  if (!session) return;
+  currentSessionId = id;
+  history = session.messages.map((message) => ({ ...message }));
+  localStorage.setItem(ACTIVE_CHAT_KEY, id);
+  renderConversation();
+  renderSessionList();
+  promptInput?.focus();
+}
+
+function createNewChat() {
+  if (generating) return;
+  const session = { id: createId(), title: "New chat", updatedAt: Date.now(), messages: [] };
+  sessions.unshift(session);
+  currentSessionId = session.id;
+  history = [];
+  saveChatSessions();
+  renderConversation();
+  renderSessionList();
+  promptInput?.focus();
+}
+
+function deleteSession(id) {
+  if (generating) return;
+  const session = sessions.find((candidate) => candidate.id === id);
+  if (!session) return;
+  const okay = window.confirm(`Delete “${session.title || "this chat"}” from this computer?`);
+  if (!okay) return;
+
+  sessions = sessions.filter((candidate) => candidate.id !== id);
+  if (currentSessionId === id) {
+    const next = [...sessions].sort((a, b) => b.updatedAt - a.updatedAt)[0] || null;
+    currentSessionId = next?.id || null;
+    history = next?.messages.map((message) => ({ ...message })) || [];
+    renderConversation();
+  }
+  saveChatSessions();
+  renderSessionList();
+}
 
 async function analyze() {
   analyzeBtn.disabled = true;
@@ -123,6 +290,8 @@ async function startManifest() {
     await invoke("start_local_ai");
     setupView.classList.add("hidden");
     chatView.classList.remove("hidden");
+    renderConversation();
+    renderSessionList();
     promptInput.focus();
   } catch (err) {
     setStatus(`START ERROR / ${String(err)}`);
@@ -156,8 +325,10 @@ function autoSize() {
 
 async function sendMessage(text) {
   if (!text.trim() || generating) return;
+  ensureCurrentSession();
   const clean = text.trim();
   history.push({ role: "user", content: clean });
+  persistCurrentSession();
   addMessage("user", clean);
   activeAssistant = addMessage("assistant", "");
   activeAssistant.classList.add("typing-cursor");
@@ -168,8 +339,12 @@ async function sendMessage(text) {
   try {
     await invoke("chat", { messages: history });
   } catch (err) {
-    if (activeAssistant && !activeAssistant.textContent) activeAssistant.textContent = `I couldn't complete that locally: ${String(err)}`;
+    const errorText = `I couldn't complete that locally: ${String(err)}`;
+    if (activeAssistant && !activeAssistant.textContent) activeAssistant.textContent = errorText;
     activeAssistant?.classList.remove("typing-cursor");
+    history.push({ role: "assistant", content: activeAssistant?.textContent || errorText });
+    persistCurrentSession();
+    activeAssistant = null;
     generating = false;
     sendBtn.disabled = false;
   }
@@ -262,6 +437,27 @@ function closeNetworkSettings(save = false) {
   networkOverlay?.setAttribute("aria-hidden", "true");
 }
 
+async function resetManifestNetwork() {
+  const okay = window.confirm(
+    "Reset Manifest Network on this computer?\n\nThis will remove the installed local AI model, saved chats, and Network settings. The app itself will remain installed."
+  );
+  if (!okay) return;
+
+  resetBtn.disabled = true;
+  resetBtn.querySelector("strong").textContent = "Resetting…";
+  try {
+    await invoke("reset_manifest_state");
+    localStorage.removeItem(NETWORK_STORAGE_KEY);
+    localStorage.removeItem(CHAT_STORAGE_KEY);
+    localStorage.removeItem(ACTIVE_CHAT_KEY);
+    window.location.reload();
+  } catch (err) {
+    window.alert(`Manifest could not finish the reset: ${String(err)}`);
+    resetBtn.disabled = false;
+    resetBtn.querySelector("strong").textContent = "Reset Manifest Network";
+  }
+}
+
 analyzeBtn.addEventListener("click", analyze);
 installBtn.addEventListener("click", installModel);
 startBtn.addEventListener("click", startManifest);
@@ -273,12 +469,9 @@ promptInput.addEventListener("keydown", (e) => {
   }
 });
 chatForm.addEventListener("submit", (e) => { e.preventDefault(); sendMessage(promptInput.value); });
-newChatBtn.addEventListener("click", () => {
-  history = [];
-  messagesEl.querySelectorAll(".message").forEach((node) => node.remove());
-  emptyState.classList.remove("hidden");
-  promptInput.focus();
-});
+newChatBtn.addEventListener("click", createNewChat);
+railNewChatBtn?.addEventListener("click", createNewChat);
+resetBtn?.addEventListener("click", resetManifestNetwork);
 
 networkBtn?.addEventListener("click", openNetworkSettings);
 networkHeaderBtn?.addEventListener("click", openNetworkSettings);
@@ -309,6 +502,7 @@ listen("chat-done", () => {
   activeAssistant.classList.remove("typing-cursor");
   const answer = activeAssistant.textContent;
   if (answer) history.push({ role: "assistant", content: answer });
+  persistCurrentSession();
   activeAssistant = null;
   generating = false;
   sendBtn.disabled = false;
@@ -316,6 +510,8 @@ listen("chat-done", () => {
 });
 
 updateNetworkBadges();
+renderSessionList();
+renderConversation();
 
 (async function boot() {
   const installed = await refreshInstallState();
