@@ -1,8 +1,8 @@
-name: Publish Manifest Desktop Release
+name: Publish Manifest Network Desktop Release
 
 on:
   workflow_run:
-    workflows: ["Build Manifest Desktop"]
+    workflows: ["Build Manifest Network Desktop"]
     types: [completed]
 
 permissions:
@@ -28,7 +28,7 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           run-id: ${{ github.event.workflow_run.id }}
-          pattern: manifest-*
+          pattern: manifest-network-*
           path: artifacts
 
       - name: Prepare public installers
@@ -39,29 +39,43 @@ jobs:
           test -n "$VERSION"
           mkdir -p release
 
-          cp "artifacts/manifest-macos-apple-silicon/dmg/Manifest_${VERSION}_aarch64.dmg" \
-             "release/Manifest-${VERSION}-Apple-Silicon.dmg"
-          cp "artifacts/manifest-macos-intel/dmg/Manifest_${VERSION}_x64.dmg" \
-             "release/Manifest-${VERSION}-Intel.dmg"
-          cp "artifacts/manifest-windows-x64/nsis/Manifest_${VERSION}_x64-setup.exe" \
-             "release/Manifest-${VERSION}-Windows-x64.exe"
-          cp "artifacts/manifest-windows-x64/msi/Manifest_${VERSION}_x64_en-US.msi" \
-             "release/Manifest-${VERSION}-Windows-x64.msi"
+          APPLE_DMG="$(find artifacts/manifest-network-macos-apple-silicon -type f -name '*.dmg' | head -n 1)"
+          INTEL_DMG="$(find artifacts/manifest-network-macos-intel -type f -name '*.dmg' | head -n 1)"
+          WINDOWS_EXE="$(find artifacts/manifest-network-windows-x64 -type f -name '*.exe' | head -n 1)"
+          WINDOWS_MSI="$(find artifacts/manifest-network-windows-x64 -type f -name '*.msi' | head -n 1)"
+
+          test -n "$APPLE_DMG"
+          test -n "$INTEL_DMG"
+          test -n "$WINDOWS_EXE"
+          test -n "$WINDOWS_MSI"
+
+          cp "$APPLE_DMG" "release/Manifest-Network-${VERSION}-Apple-Silicon.dmg"
+          cp "$INTEL_DMG" "release/Manifest-Network-${VERSION}-Intel.dmg"
+          cp "$WINDOWS_EXE" "release/Manifest-Network-${VERSION}-Windows-x64.exe"
+          cp "$WINDOWS_MSI" "release/Manifest-Network-${VERSION}-Windows-x64.msi"
 
           cat > release-notes.md <<EOF
-          # Manifest Desktop ${VERSION}
+          # Manifest Network Desktop ${VERSION}
 
-          Private local AI for the computer you already own.
+          Private local AI with an optional community-network participation layer.
+
+          ## What this alpha includes
+          - local hardware analysis;
+          - automatic local-model installation;
+          - bundled local inference;
+          - private chat on the user's computer;
+          - Manifest Network participation controls for performance, compute, learning, and human feedback.
+
+          ## Network status
+          The contribution network is still a product preview in this release. Participation preferences are stored locally; the alpha does not yet transmit network jobs, learning packets, or contribution credits.
 
           ## Downloads
-          - **Mac — Apple Silicon:** for M1, M2, M3, M4 and later Apple-silicon Macs.
-          - **Mac — Intel:** for older Intel-based Macs.
+          - **Mac — Apple Silicon:** M1, M2, M3, M4 and later Apple-silicon Macs.
+          - **Mac — Intel:** older Intel-based Macs.
           - **Windows x64:** standard installer plus MSI package.
 
-          ## Alpha note
-          This is an early Manifest Desktop build. Mac builds are ad-hoc signed but are not yet Apple-notarized, so macOS may ask you to approve Manifest in **System Settings → Privacy & Security → Open Anyway** on first launch. Windows may similarly show a SmartScreen warning until production code signing is added.
-
-          Manifest analyzes hardware locally, downloads only the selected AI model, and runs inference on the user's computer. No separate Ollama or LM Studio installation is required.
+          ## Security note
+          Mac builds are ad-hoc signed but are not yet Apple-notarized, so macOS may require **System Settings → Privacy & Security → Open Anyway** on first launch. Windows may similarly show SmartScreen until production code signing is added.
           EOF
 
       - name: Create or update GitHub Release
@@ -74,11 +88,11 @@ jobs:
           TAG="v${VERSION}"
           if gh release view "$TAG" >/dev/null 2>&1; then
             gh release upload "$TAG" release/* --clobber
-            gh release edit "$TAG" --title "Manifest Desktop ${VERSION}" --notes-file release-notes.md --latest
+            gh release edit "$TAG" --title "Manifest Network Desktop ${VERSION}" --notes-file release-notes.md --latest
           else
             gh release create "$TAG" release/* \
               --target "${{ github.event.workflow_run.head_sha }}" \
-              --title "Manifest Desktop ${VERSION}" \
+              --title "Manifest Network Desktop ${VERSION}" \
               --notes-file release-notes.md \
               --latest
           fi
