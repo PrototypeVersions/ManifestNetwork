@@ -71,7 +71,7 @@ function installBrowserDemoSection() {
       <p>Analyze this device, install a lightweight browser-local AI, save multiple chat sessions in the left sidebar, and preview the same independent Network Settings concept used by the desktop app. The chat interface below is intentionally black and runs locally in your browser when WebGPU is available.</p>
     </div>
     <div class="browser-demo-frame-wrap">
-      <iframe class="browser-demo-frame" src="browser-demo/" title="Manifest live browser demo" loading="lazy" allow="clipboard-read; clipboard-write"></iframe>
+      <iframe class="browser-demo-frame" src="browser-demo/" title="Manifest live browser demo" loading="lazy" allow="webgpu; clipboard-read; clipboard-write"></iframe>
     </div>
     <div class="browser-demo-note"><strong>Browser demo:</strong><span>Two lightweight WebLLM models only. The downloadable desktop app is the broader Manifest experience.</span></div>
   `;
