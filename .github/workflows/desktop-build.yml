@@ -1,4 +1,4 @@
-name: Build Manifest Desktop
+name: Build Manifest Network Desktop
 
 on:
   workflow_dispatch:
@@ -21,16 +21,16 @@ jobs:
             os: macos-15-intel
             target: x86_64-apple-darwin
             macos_deployment_target: "10.15"
-            artifact: manifest-macos-intel
+            artifact: manifest-network-macos-intel
           - name: macOS Apple Silicon
             os: macos-15
             target: aarch64-apple-darwin
             macos_deployment_target: "11.0"
-            artifact: manifest-macos-apple-silicon
+            artifact: manifest-network-macos-apple-silicon
           - name: Windows x64
             os: windows-latest
             target: x86_64-pc-windows-msvc
-            artifact: manifest-windows-x64
+            artifact: manifest-network-windows-x64
 
     runs-on: ${{ matrix.os }}
     defaults:
@@ -121,7 +121,7 @@ jobs:
           if (-not $server) { throw "llama-server.exe was not produced" }
           Copy-Item $server.FullName "src-tauri/binaries/llama-server-${{ matrix.target }}.exe"
 
-      - name: Build Manifest on macOS
+      - name: Build Manifest Network on macOS
         if: runner.os == 'macOS'
         shell: bash
         env:
@@ -135,17 +135,20 @@ jobs:
         shell: bash
         run: |
           set -euxo pipefail
-          PLIST="src-tauri/target/${{ matrix.target }}/release/bundle/macos/Manifest.app/Contents/Info.plist"
+          BUNDLE_DIR="src-tauri/target/${{ matrix.target }}/release/bundle/macos"
+          PLIST="$(find "$BUNDLE_DIR" -path '*.app/Contents/Info.plist' | head -n 1)"
+          test -n "$PLIST"
           /usr/libexec/PlistBuddy -c "Print :LSMinimumSystemVersion" "$PLIST" || true
-          APP_BINARY="src-tauri/target/${{ matrix.target }}/release/manifest-desktop"
+          APP_BINARY="src-tauri/target/${{ matrix.target }}/release/manifest-network-desktop"
+          test -f "$APP_BINARY"
           otool -l "$APP_BINARY" | awk '
             $1 == "cmd" && $2 == "LC_BUILD_VERSION" { build = 1; old = 0; next }
             $1 == "cmd" && $2 == "LC_VERSION_MIN_MACOSX" { old = 1; build = 0; next }
-            build && $1 == "minos" { print "Manifest executable minimum macOS: " $2; exit }
-            old && $1 == "version" { print "Manifest executable minimum macOS: " $2; exit }
+            build && $1 == "minos" { print "Manifest Network executable minimum macOS: " $2; exit }
+            old && $1 == "version" { print "Manifest Network executable minimum macOS: " $2; exit }
           '
 
-      - name: Build Manifest on Windows
+      - name: Build Manifest Network on Windows
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
