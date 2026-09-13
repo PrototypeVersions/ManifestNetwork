@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="color-scheme" content="light" />
+  <title>Manifest Browser Demo</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="rail">
+      <div class="rail-main">
+        <div class="brand-row">
+          <div class="brand-mark">M</div>
+          <div><strong>Manifest</strong><span>BROWSER AI</span></div>
+        </div>
+        <div class="rail-rule"></div>
+        <button id="newChatBtn" class="rail-new-chat" type="button"><span>＋</span><strong>New chat</strong></button>
+        <div class="chat-history-block">
+          <div class="chat-history-head"><span>CHATS</span><small>Saved in this browser</small></div>
+          <div id="chatSessionList" class="chat-session-list" aria-label="Saved chats"></div>
+          <div id="noChatsLabel" class="no-chats-label">No saved chats yet.</div>
+        </div>
+      </div>
+      <div class="rail-bottom">
+        <button id="networkBtn" class="network-rail-button" type="button"><span class="network-dot"></span><div><strong>Network Settings</strong><small id="networkRailStatus">Private mode</small></div><b>→</b></button>
+        <div class="privacy-card"><i></i><div><strong>Browser-local demo</strong><span>Network contribution is not active in this demo.</span></div></div>
+      </div>
+    </aside>
+
+    <main class="main">
+      <section id="setupView" class="view setup-view">
+        <div class="eyebrow">MANIFEST / LIVE BROWSER DEMO</div>
+        <h1>Analyze. Install.<br>Ask anything.</h1>
+        <p class="lead">This demo reads only the hardware information your browser exposes, recommends one of two lightweight browser-local models, and runs the chat in this browser with WebGPU.</p>
+
+        <div class="setup-grid">
+          <section class="setup-card primary-card">
+            <div class="step-number">01</div>
+            <div class="card-copy"><span class="card-label">DEVICE ANALYSIS</span><h2>Understand this browser.</h2><p>Manifest checks browser-exposed CPU, memory and WebGPU capabilities without sending the analysis to a server.</p></div>
+            <button id="analyzeBtn" class="button dark" type="button">Analyze This Device <span>→</span></button>
+          </section>
+
+          <section id="profileCard" class="setup-card profile-card hidden">
+            <div class="profile-head"><span class="card-label">THIS DEVICE</span><span id="scorePill" class="score-pill">—</span></div>
+            <div class="profile-list">
+              <div><span>Platform</span><strong id="profilePlatform">—</strong></div>
+              <div><span>CPU threads</span><strong id="profileCores">—</strong></div>
+              <div><span>Memory</span><strong id="profileRam">—</strong></div>
+              <div><span>WebGPU</span><strong id="profileGpu">—</strong></div>
+            </div>
+          </section>
+
+          <section id="recommendCard" class="setup-card install-card hidden">
+            <div class="step-number">02</div>
+            <div class="card-copy"><span class="card-label">BROWSER INTELLIGENCE</span><h2 id="modelName">Manifest Browser AI</h2><p id="modelReason">Manifest will select a lightweight model that fits this browser.</p><div class="model-meta"><span id="modelTier">Local browser AI</span><span id="modelSize">WebGPU</span></div></div>
+            <div id="downloadWrap" class="download-wrap hidden"><div class="download-meta"><span id="downloadText">Preparing…</span><strong id="downloadPercent">0%</strong></div><div class="progress"><div id="downloadBar"></div></div></div>
+            <button id="installBtn" class="button green" type="button">Install My AI <span>↓</span></button>
+          </section>
+
+          <section id="readyCard" class="setup-card ready-card hidden">
+            <div class="step-number check">✓</div>
+            <div class="card-copy"><span class="card-label">AI READY</span><h2>Your AI is ready.</h2><p>The model is loaded in this browser. Your saved demo chats remain in this browser's local storage.</p></div>
+            <button id="startBtn" class="button dark" type="button">Start Chatting <span>→</span></button>
+          </section>
+        </div>
+        <div id="setupStatus" class="status-line">READY TO ANALYZE / NOTHING SENT TO A SERVER</div>
+      </section>
+
+      <section id="chatView" class="view chat-view hidden">
+        <header class="chat-head">
+          <div><span class="eyebrow">BROWSER AI</span><h2 id="chatTitle">Manifest</h2></div>
+          <div class="chat-head-actions"><span class="runtime-pill"><i></i> LOCAL</span><button id="networkHeaderBtn" class="network-header-button" type="button">Network</button><button id="setupAgainBtn" class="text-button" type="button">Device</button></div>
+        </header>
+        <div id="messages" class="messages">
+          <div id="emptyState" class="empty-state"><div class="empty-mark">M</div><h3>Your AI is ready.</h3><p>Ask anything. Network contribution is independent of your personal chat.</p></div>
+        </div>
+        <div class="composer-wrap"><form id="chatForm" class="composer"><textarea id="promptInput" rows="1" placeholder="Message Manifest" autocomplete="off"></textarea><button id="sendBtn" class="send" type="submit" aria-label="Send">↑</button></form><p>BROWSER-LOCAL INFERENCE · NO PER-MESSAGE API FEE</p></div>
+      </section>
+    </main>
+  </div>
+
+  <div id="networkOverlay" class="network-overlay hidden" aria-hidden="true">
+    <section class="network-panel" role="dialog" aria-modal="true" aria-labelledby="networkTitle">
+      <header class="network-panel-head"><div><span>MANIFEST / NETWORK SETTINGS PREVIEW</span><h2 id="networkTitle">Choose how you would participate.</h2><p>These controls are a product preview. They are saved only in this browser and do not send contributions anywhere yet.</p></div><button id="networkCloseBtn" class="close-btn" type="button" aria-label="Close">×</button></header>
+      <div class="network-panel-body">
+        <div class="network-settings">
+          <label class="network-setting"><div><strong>Performance intelligence</strong><span>Share model speed, memory use and hardware-level benchmark results without sharing chat content.</span></div><input id="performanceToggle" class="toggle" type="checkbox" /></label>
+          <label class="network-setting"><div><strong>Idle compute</strong><span>Allow approved network jobs while this device is idle and plugged in.</span></div><input id="computeToggle" class="toggle" type="checkbox" /></label>
+          <div id="computeLimit" class="compute-limit disabled"><div><span>Maximum nightly contribution</span><strong><span id="hoursValue">4</span> hours</strong></div><input id="hoursSlider" type="range" min="1" max="12" value="4" /></div>
+          <label class="network-setting"><div><strong>Learning contributions</strong><span>Allow locally sanitized learning packets. Raw chat sharing remains off by default.</span></div><input id="learningToggle" class="toggle" type="checkbox" /></label>
+          <label class="network-setting"><div><strong>Human feedback</strong><span>Offer occasional comparisons or corrections where human judgment is useful.</span></div><input id="feedbackToggle" class="toggle" type="checkbox" /></label>
+        </div>
+        <aside class="network-summary"><span>NODE MODE</span><strong id="nodeMode">PRIVATE</strong><p id="nodeModeCopy">Nothing is selected for contribution.</p><div class="summary-rule"></div><div><span>Estimated credits</span><b id="creditEstimate">0 / month</b></div><div><span>Chat upload</span><b>OFF</b></div><div><span>Current backend</span><b>PREVIEW ONLY</b></div><small>Future credits would be based on useful verified work, not merely enabling a setting.</small></aside>
+      </div>
+      <footer class="network-panel-foot"><span>COMPUTE PERMISSION AND DATA PERMISSION ARE SEPARATE</span><button id="networkDoneBtn" class="button dark" type="button">Save Locally <span>✓</span></button></footer>
+    </section>
+  </div>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
